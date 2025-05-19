@@ -4,6 +4,8 @@ import time
 import serial
 from serial import SerialException
 
+# Set in openDevice for delay as thread that calls read
+READ_DELAY = 1 # Factory setting was 10
 
 # 串口配置 Serial Port Configuration
 class SerialConfig:
@@ -154,7 +156,7 @@ class DeviceModel:
             self.isOpen = True
             print("{}已打开".format(self.serialConfig.portName))
             # 开启一个线程持续监听串口数据 Start a thread to continuously listen to serial port data
-            t = threading.Thread(target=self.readDataTh, args=("Data-Received-Thread", 10,))
+            t = threading.Thread(target=self.readDataTh, args=("Data-Received-Thread", READ_DELAY,)) # delay was 10
             t.start()
             print("设备打开成功")
         except SerialException:
@@ -357,7 +359,7 @@ class DeviceModel:
         while self.loop:
             for addr in self.addrLis:
                 self.readReg(addr, 0x34, 12)
-                time.sleep(0.2)
+                time.sleep(0.05) # was 0.2)
         print("循环读取结束")
 
     # 关闭循环读取 Close loop reading
