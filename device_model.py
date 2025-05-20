@@ -16,7 +16,7 @@ class SerialConfig:
 class DeviceModel:
     deviceName = "Unnamed Accelerometer" # This will be populated when initialized
     addrLis = [] # This will be populated when initialized
-    deviceData = {} # Device Data Dictionary
+    deviceData = {} # WARNING DeviceModel.__init__() seems to ignore this!
     isOpen = False
     loop = False # Whether to loop read
     serialPort = None # This will be populated when initialized
@@ -274,7 +274,7 @@ class DeviceModel:
         # Device modbus address
         tempBytes[0] = devid
         # Write function code
-        tempBytes[1] = 0x06
+        tempBytes[1] = 0x06 
         # High 8 bits of the register
         tempBytes[2] = regAddr >> 8
         # Low 8 bits of the register
