@@ -7,49 +7,46 @@ from serial import SerialException
 # Set in openDevice for delay as thread that calls read
 READ_DELAY = 1 # Factory setting was 10
 
-# 串口配置 Serial Port Configuration
+# Serial Port Configuration
 class SerialConfig:
-    # 串口号
+    # This will be populated when called and initialized
     portName = ''
 
-    # 波特率
+    # This will be populated when called and initialized
     baud = 9600
 
-
-# 设备实例 Device instance
+# Device instance
 class DeviceModel:
-    # region 属性 attribute
+    # This will be populated when called and initialized
+    deviceName = "Unnamed Accelerometer"
 
-    # 设备名称 deviceName
-    deviceName = "我的设备"
-
-    # 设备modbus ID列表
+    # This will be populated when called and initialized
     addrLis = []
 
-    # 设备数据字典 Device Data Dictionary
+    # Device Data Dictionary
     deviceData = {}
 
-    # 设备是否开启
+    # 
     isOpen = False
 
-    # 是否循环读取 Whether to loop read
+    # Whether to loop read
     loop = False
 
-    # 串口 Serial port
+    # Serial port
     serialPort = None
 
-    # 串口配置 Serial Port Configuration
+    # Serial Port Configuration
     serialConfig = SerialConfig()
 
-    # 临时数组 Temporary array
+    # Temporary array
     TempBytes = []
 
-    # 起始寄存器 Start register
+    # Start register
     statReg = None
 
     # endregion
 
-    # region   计算CRC Calculate CRC
+    # Calculate CRC
     auchCRCHi = [
         0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81,
         0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
@@ -90,29 +87,25 @@ class DeviceModel:
         0x44, 0x84, 0x85, 0x45, 0x87, 0x47, 0x46, 0x86, 0x82, 0x42, 0x43, 0x83, 0x41, 0x81, 0x80,
         0x40]
 
-    # endregion  计算CRC
-
     def __init__(self, deviceName, portName, baud, addrLis, callback_method):
-        print("初始化设备模型")
-        # 设备名称（自定义） Device Name
+        print("Initializing new DeviceModel")
         self.deviceName = deviceName
-        # 串口号 Serial port number
+        # Serial port number
         self.serialConfig.portName = portName
-        # 串口波特率 baud
         self.serialConfig.baud = baud
-        # modbus ID 设备地址
+        # modbus ID
         self.addrLis = addrLis
         self.deviceData = {}
-        # 数据回调方法 Data callback method
+        # Data callback method
         self.callback_method = callback_method
-        # 初始化设备数据字典 Initialize device data dictionary
+        # Initialize device data dictionary
         for addr in addrLis:
             self.deviceData[addr] = {}
 
-    # 获得CRC校验 Obtain CRC verification
+    # Obtain CRC verification
     def get_crc(self, datas, dlen):
-        tempH = 0xff  # 高 CRC 字节初始化 High CRC byte initialization
-        tempL = 0xff  # 低 CRC 字节初始化 Low CRC byte initialization
+        tempH = 0xff  # High CRC byte initialization
+        tempL = 0xff  # Low CRC byte initialization
         for i in range(0, dlen):
             tempIndex = (tempH ^ datas[i]) & 0xff
             tempH = (tempL ^ self.auchCRCHi[tempIndex]) & 0xff
@@ -120,16 +113,16 @@ class DeviceModel:
         return (tempH << 8) | tempL
         pass
 
-    # region 获取设备数据 Obtain device data
+    # Obtain device data
 
-    # 设置设备数据 Set device data
+    # Set device data
     def set(self, ADDR, key, value):
-        # 将设备数据存到键值 Saving device data to key values
+        # Saving device data to key values
         self.deviceData[ADDR][key] = value
 
-    # 获得设备数据 Obtain device data
+    # Obtain device data
     def get(self, ADDR, key):
-        # 从键值中获取数据，没有则返回None Obtaining data from key values
+        # Obtaining data from key values
         if ADDR in self.deviceData:
             if key in self.deviceData[ADDR]:
                 return self.deviceData[ADDR][key]
@@ -138,35 +131,30 @@ class DeviceModel:
         else:
             return None
 
-    # 删除设备数据 Delete device data
+    # Delete device data
     def remove(self, ADDR, key):
-        # 删除设备键值
         if ADDR in self.deviceData:
             if key in self.deviceData[ADDR]:
                 del self.deviceData[ADDR][key]
 
-    # endregion
-
-    # 打开设备 open Device
     def openDevice(self):
-        # 先关闭端口 Turn off the device first
+        # Turn off the device first
         self.closeDevice()
         try:
             self.serialPort = serial.Serial(self.serialConfig.portName, self.serialConfig.baud, timeout=0.5)
             self.isOpen = True
-            print("{}已打开".format(self.serialConfig.portName))
-            # 开启一个线程持续监听串口数据 Start a thread to continuously listen to serial port data
+            print("Serial Port Name: {}".format(self.serialConfig.portName))
+            # Start a thread to continuously listen to serial port data
             t = threading.Thread(target=self.readDataTh, args=("Data-Received-Thread", READ_DELAY,)) # delay was 10
             t.start()
-            print("设备打开成功")
-        except SerialException:
-            print("打开" + self.serialConfig.portName + "失败")
+            print("Serial Port Opened, thread started to continuously read.")
+        except SerialException as ex:
+            print("SerialException" + self.serialConfig.portName + ex)
 
-    # 监听串口数据线程 Listening to serial data threads
+    # Listening to serial data threads
     def readDataTh(self, threadName, delay):
-        print("启动" + threadName)
+        print("Thread name:" + threadName)
         while True:
-            # 如果串口打开了
             if self.isOpen:
                 try:
                     tLen = self.serialPort.inWaiting()
@@ -177,46 +165,44 @@ class DeviceModel:
                     print(ex)
             else:
                 time.sleep(0.1)
-                print("串口未打开")
+                print("Serial Port was closed, waiting 0.1 seconds")
                 break
 
-    # 关闭设备  close Device
+    # close Device
     def closeDevice(self):
         if self.serialPort is not None:
             self.serialPort.close()
-            print("端口关闭了")
+            print("Serial Port Close Sent")
         self.isOpen = False
-        print("设备关闭了")
+        print("Serial Port Closed")
     
-    # region 数据解析 data analysis
+    # data analysis
 
-    # 串口数据处理  Serial port data processing
+    # Serial port data processing
     def onDataReceived(self, data):
         tempdata = bytes.fromhex(data.hex())
         for val in tempdata:
             self.TempBytes.append(val)
-            # 判断ID是否正确 Determine if the ID is correct
+            # Determine if the ID is correct
             if self.TempBytes[0] not in self.addrLis:
                 del self.TempBytes[0]
                 continue
-            # 判断是否是03读取功能码 Determine whether it is 03 to read the function code
+            # Determine whether it is 03 to read the function code
             if len(self.TempBytes) > 2:
                 if not (self.TempBytes[1] == 0x03):
                     del self.TempBytes[0]
                     continue
                 tLen = len(self.TempBytes)
-                # 拿到一包完整协议数据 Get a complete package of protocol data
+                # Get a complete package of protocol data
                 if tLen == self.TempBytes[2] + 5:
-                    # CRC校验
                     tempCrc = self.get_crc(self.TempBytes, tLen - 2)
                     if (tempCrc >> 8) == self.TempBytes[tLen - 2] and (tempCrc & 0xff) == self.TempBytes[tLen - 1]:
                         self.processData(self.TempBytes[2])
                     else:
                         del self.TempBytes[0]
 
-    # 数据解析 data analysis
+    # data analysis
     def processData(self, length):
-        # 　数据解析
         ADDR = self.TempBytes[0]
         if length == 24:
             AccX = self.getSignInt16(self.TempBytes[3] << 8 | self.TempBytes[4]) / 32768 * 16
@@ -256,7 +242,6 @@ class DeviceModel:
                     self.statReg += 1
         self.TempBytes.clear()
 
-    # endregion
 
     @staticmethod
     def getSignInt16(num):
@@ -270,58 +255,58 @@ class DeviceModel:
             num -= pow(2, 32)
         return num
 
-    # 发送串口数据 Sending serial port data
+    # Sending serial port data
     def sendData(self, data):
         try:
             self.serialPort.write(data)
         except Exception as ex:
             print(ex)
 
-    # 读取寄存器 read register
+    # read register
     def readReg(self, ADDR, regAddr, regCount):
-        # 从指令中获取起始寄存器 （处理回传数据需要用到） Get start register from instruction
+        # Get start register from instruction
         self.statReg = regAddr
-        # 封装读取指令并向串口发送数据 Encapsulate read instructions and send data to the serial port
+        # Encapsulate read instructions and send data to the serial port
         self.sendData(self.get_readBytes(ADDR, regAddr, regCount))
 
-    # 写入寄存器 Write Register
+    # Write Register
     def writeReg(self, ADDR, regAddr, sValue):
-        # 解锁 unlock
+        # unlock
         self.unlock(ADDR)
-        # 延迟100ms Delay 100ms
+        # Delay 100ms
         time.sleep(0.1)
-        # 封装写入指令并向串口发送数据
+        # Encapsulate the write command and send data to the serial port
         self.sendData(self.get_writeBytes(ADDR, regAddr, sValue))
-        # 延迟100ms Delay 100ms
+        # Delay 100ms
         time.sleep(0.1)
-        # 保存 save
+        # save
         self.save(ADDR)
 
-    # 发送读取指令封装 Send read instruction encapsulation
+    # Send read instruction encapsulation
     def get_readBytes(self, devid, regAddr, regCount):
-        # 初始化
+        # Initialize
         tempBytes = [None] * 8
-        # 设备modbus地址
+        # Device modbus address
         tempBytes[0] = devid
-        # 读取功能码
+        # Read Function Code
         tempBytes[1] = 0x03
-        # 寄存器高8位
+        # High 8 bits of the register
         tempBytes[2] = regAddr >> 8
-        # 寄存器低8位
+        # Low 8 bits of the register
         tempBytes[3] = regAddr & 0xff
-        # 读取寄存器个数高8位
+        # Read the high 8 bits of the number of registers
         tempBytes[4] = regCount >> 8
-        # 读取寄存器个数低8位
+        # Read the lower 8 bits of the number of registers
         tempBytes[5] = regCount & 0xff
-        # 获得CRC校验
+        # Obtain CRC checksum
         tempCrc = self.get_crc(tempBytes, len(tempBytes) - 2)
-        # CRC校验高8位
+        # CRC checksum high 8 bits
         tempBytes[6] = tempCrc >> 8
-        # CRC校验低8位
+        # Low 8 bits of CRC check
         tempBytes[7] = tempCrc & 0xff
         return tempBytes
 
-    # 发送写入指令封装 Send write instruction encapsulation
+    # Send write instruction encapsulation
     def get_writeBytes(self, devid, regAddr, sValue):
         # 初始化
         tempBytes = [None] * 8
