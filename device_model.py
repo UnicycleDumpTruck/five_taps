@@ -9,42 +9,20 @@ READ_DELAY = 1 # Factory setting was 10
 
 # Serial Port Configuration
 class SerialConfig:
-    # This will be populated when called and initialized
-    portName = ''
-
-    # This will be populated when called and initialized
-    baud = 9600
+    portName = '' # This will be populated when called and initialized
+    baud = 9600 # This will be populated when called and initialized
 
 # Device instance
 class DeviceModel:
-    # This will be populated when called and initialized
-    deviceName = "Unnamed Accelerometer"
-
-    # This will be populated when called and initialized
-    addrLis = []
-
-    # Device Data Dictionary
-    deviceData = {}
-
-    # 
+    deviceName = "Unnamed Accelerometer" # This will be populated when initialized
+    addrLis = [] # This will be populated when initialized
+    deviceData = {} # Device Data Dictionary
     isOpen = False
-
-    # Whether to loop read
-    loop = False
-
-    # Serial port
-    serialPort = None
-
-    # Serial Port Configuration
-    serialConfig = SerialConfig()
-
-    # Temporary array
-    TempBytes = []
-
-    # Start register
-    statReg = None
-
-    # endregion
+    loop = False # Whether to loop read
+    serialPort = None # This will be populated when initialized
+    serialConfig = SerialConfig() # Serial Port Configuration
+    TempBytes = [] # Temporary array
+    statReg = None # Start register
 
     # Calculate CRC
     auchCRCHi = [
@@ -88,18 +66,14 @@ class DeviceModel:
         0x40]
 
     def __init__(self, deviceName, portName, baud, addrLis, callback_method):
-        print("Initializing new DeviceModel")
+        print(f"Initializing new DeviceModel {deviceName} at port {portName} with speed {baud} and addresses {addrLis}")
         self.deviceName = deviceName
-        # Serial port number
-        self.serialConfig.portName = portName
+        self.serialConfig.portName = portName # Serial port number
         self.serialConfig.baud = baud
-        # modbus ID
-        self.addrLis = addrLis
+        self.addrLis = addrLis # modbus ID
         self.deviceData = {}
-        # Data callback method
-        self.callback_method = callback_method
-        # Initialize device data dictionary
-        for addr in addrLis:
+        self.callback_method = callback_method # Data callback method
+        for addr in addrLis: # Initialize device data dictionary
             self.deviceData[addr] = {}
 
     # Obtain CRC verification
@@ -271,92 +245,77 @@ class DeviceModel:
 
     # Write Register
     def writeReg(self, ADDR, regAddr, sValue):
-        # unlock
         self.unlock(ADDR)
-        # Delay 100ms
         time.sleep(0.1)
         # Encapsulate the write command and send data to the serial port
         self.sendData(self.get_writeBytes(ADDR, regAddr, sValue))
-        # Delay 100ms
         time.sleep(0.1)
-        # save
         self.save(ADDR)
 
     # Send read instruction encapsulation
     def get_readBytes(self, devid, regAddr, regCount):
         # Initialize
         tempBytes = [None] * 8
+        tempBytes[0] = devid # Device modbus address
+        tempBytes[1] = 0x03 # Read Function Code
+        tempBytes[2] = regAddr >> 8 # High 8 bits of the register
+        tempBytes[3] = regAddr & 0xff # Low 8 bits of the register
+        tempBytes[4] = regCount >> 8 # Read the high 8 bits of the number of registers
+        tempBytes[5] = regCount & 0xff # Read the lower 8 bits of the number of registers
+        tempCrc = self.get_crc(tempBytes, len(tempBytes) - 2) # Obtain CRC checksum
+        tempBytes[6] = tempCrc >> 8 # CRC checksum high 8 bits
+        tempBytes[7] = tempCrc & 0xff # Low 8 bits of CRC check
+        return tempBytes
+
+    # Send write instruction encapsulation
+    def get_writeBytes(self, devid, regAddr, sValue):
+        # Initialize
+        tempBytes = [None] * 8
         # Device modbus address
         tempBytes[0] = devid
-        # Read Function Code
-        tempBytes[1] = 0x03
+        # Write function code
+        tempBytes[1] = 0x06
         # High 8 bits of the register
         tempBytes[2] = regAddr >> 8
         # Low 8 bits of the register
         tempBytes[3] = regAddr & 0xff
-        # Read the high 8 bits of the number of registers
-        tempBytes[4] = regCount >> 8
-        # Read the lower 8 bits of the number of registers
-        tempBytes[5] = regCount & 0xff
+        # High 8 bits of the register value
+        tempBytes[4] = sValue >> 8
+        # Lower 8 bits of the register value
+        tempBytes[5] = sValue & 0xff
         # Obtain CRC checksum
         tempCrc = self.get_crc(tempBytes, len(tempBytes) - 2)
-        # CRC checksum high 8 bits
+        # High 8 bits of CRC check
         tempBytes[6] = tempCrc >> 8
         # Low 8 bits of CRC check
         tempBytes[7] = tempCrc & 0xff
         return tempBytes
 
-    # Send write instruction encapsulation
-    def get_writeBytes(self, devid, regAddr, sValue):
-        # 初始化
-        tempBytes = [None] * 8
-        # 设备modbus地址
-        tempBytes[0] = devid
-        # 写入功能码
-        tempBytes[1] = 0x06
-        # 寄存器高8位
-        tempBytes[2] = regAddr >> 8
-        # 寄存器低8位
-        tempBytes[3] = regAddr & 0xff
-        # 寄存器值高8位
-        tempBytes[4] = sValue >> 8
-        # 寄存器值低8位
-        tempBytes[5] = sValue & 0xff
-        # 获得CRC校验
-        tempCrc = self.get_crc(tempBytes, len(tempBytes) - 2)
-        # CRC校验高8位
-        tempBytes[6] = tempCrc >> 8
-        # CRC校验低8位
-        tempBytes[7] = tempCrc & 0xff
-        return tempBytes
-
-    # 开始循环读取 Start loop reading
+    # Start loop reading
     def startLoopRead(self):
-        # 循环读取控制
+        # Loop Read Control
         self.loop = True
-        # 开启读取线程 Enable read thread
+        # Enable read thread
         t = threading.Thread(target=self.loopRead, args=())
         t.start()
 
-    # 循环读取线程 Loop reading data
+    # Loop reading data
     def loopRead(self):
-        print("循环读取开始")
+        print("Loop read starts")
         while self.loop:
             for addr in self.addrLis:
                 self.readReg(addr, 0x34, 12)
                 time.sleep(0.05) # was 0.2)
-        print("循环读取结束")
+        print("End of loop reading")
 
-    # 关闭循环读取 Close loop reading
+    # Close loop reading
     def stopLoopRead(self):
         self.loop = False
 
-    # 解锁
     def unlock(self, ADDR):
         cmd = self.get_writeBytes(ADDR, 0x69, 0xb588)
         self.sendData(cmd)
 
-    # 保存
     def save(self, ADDR):
         cmd = self.get_writeBytes(ADDR, 0x00, 0x0000)
         self.sendData(cmd)
