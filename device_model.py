@@ -5,7 +5,7 @@ import serial
 from serial import SerialException
 
 # Set in openDevice for delay as thread that calls read
-READ_DELAY = 1 # Factory setting was 10
+READ_DELAY = 0.001 # Factory setting was 10
 
 # Serial Port Configuration
 class SerialConfig:
@@ -141,6 +141,7 @@ class DeviceModel:
                 time.sleep(0.1)
                 print("Serial Port was closed, waiting 0.1 seconds")
                 break
+            time.sleep(delay)
 
     # close Device
     def closeDevice(self):

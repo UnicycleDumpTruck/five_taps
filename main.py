@@ -10,28 +10,28 @@ dime = {
 }
 pizza_penny = {
     "coin_name": "Pizza Penny",
-    "serial_port": "/dev/ttyUSB0",
+    "serial_port": "/dev/ttyUSB1",
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "kaching.wav",
 }
 truck_penny = {
     "coin_name": "Truck Penny",
-    "serial_port": "/dev/ttyUSB0",
+    "serial_port": "/dev/ttyUSB2",
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "kaching.wav",
 }
 nickel = {
     "coin_name": "Nickel",
-    "serial_port": "/dev/ttyUSB0",
+    "serial_port": "/dev/ttyUSB3",
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "kaching.wav",
 }
 quarter = {
     "coin_name": "Quarter",
-    "serial_port": "/dev/ttyUSB0",
+    "serial_port": "/dev/ttyUSB4",
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "kaching.wav",
@@ -39,10 +39,10 @@ quarter = {
 
 coin_data = [
     dime,
-    #pizza_penny,
-    #truck_penny,
-    #nickel,
-    #quarter,
+    pizza_penny,
+    truck_penny,
+    nickel,
+    quarter,
 ]
 coins = []
 if __name__ == "__main__":
