@@ -2,7 +2,7 @@ import device_model
 import time
 import threading
 import pyglet
-
+pyglet.options['headless'] = True
 pyglet.options.shadow_window = False
 display = pyglet.display.get_display()
 screen = display.get_default_screen()
