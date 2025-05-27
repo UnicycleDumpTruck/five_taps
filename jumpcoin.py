@@ -3,6 +3,16 @@ import time
 import threading
 import pyglet
 
+pyglet.options.shadow_window = False
+display = pyglet.display.get_display()
+screen = display.get_default_screen()
+config = screen.get_best_config()
+config.opengl_api = "gles"
+config.major_version = 3
+config.minor_version = 0
+
+#window = pyglet.window.Window(config=config)
+
 G_THRESHOLD = -1.015    # how much g in z-axix triggers sound
                         # Negative because the sensor is upside down
 

@@ -5,7 +5,7 @@ import serial
 from serial import SerialException
 
 # Set in openDevice for delay as thread that calls read
-READ_DELAY = 0.001 # Factory setting was 10
+READ_DELAY = 0# 0.001 # Factory setting was 10
 
 # Serial Port Configuration
 class SerialConfig:
