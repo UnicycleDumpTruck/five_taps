@@ -7,6 +7,7 @@ dime = {
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "kaching.wav",
+    "io_pin": 4,
 }
 pizza_penny = {
     "coin_name": "Pizza Penny",
@@ -14,6 +15,7 @@ pizza_penny = {
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "kaching.wav",
+    "io_pin": 27,
 }
 truck_penny = {
     "coin_name": "Truck Penny",
@@ -21,6 +23,7 @@ truck_penny = {
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "kaching.wav",
+    "io_pin":21,
 }
 nickel = {
     "coin_name": "Nickel",
@@ -28,6 +31,7 @@ nickel = {
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "kaching.wav",
+    "io_pin":13,
 }
 quarter = {
     "coin_name": "Quarter",
@@ -35,6 +39,7 @@ quarter = {
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "kaching.wav",
+    "io_pin":26,
 }
 
 coin_data = [
@@ -54,6 +59,7 @@ if __name__ == "__main__":
                 coin_datum["baudrate"],
                 coin_datum["modbus_addr"],
                 coin_datum["audio_file"],
+                coin_datum["io_pin"],
             )
         )
     print("Done initializing coins in main.py")

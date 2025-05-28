@@ -1,7 +1,10 @@
+import gpiozero
 import device_model
 import time
 import threading
 import pyglet
+
+# Pyglet Config, even though no display is used, GL is involved
 pyglet.options['headless'] = True
 pyglet.options.shadow_window = False
 display = pyglet.display.get_display()
@@ -11,21 +14,15 @@ config.opengl_api = "gles"
 config.major_version = 3
 config.minor_version = 0
 
-#window = pyglet.window.Window(config=config)
 
 G_THRESHOLD = -1.015    # how much g in z-axix triggers sound
                         # Negative because the sensor is upside down
 
+LED_ON_TIME = 1.5 # Seconds to leave LED ring lit after trigger/jump
+
 MIN_SECONDS_BETWEEN_SOUNDS = (
-    1.0  # Fractional seconds before a coin can play another sound
+    1.6  # Fractional seconds before coin can play sound again
 )
-
-# For now, we'll keep the JumpCoin's separate, each to be run in a separate thread
-# We could put them all on the same modbus and address them there,
-# but the computer might be able to more effectively deal with five
-# if each gets its own modbus and USB port and the computer uses
-# one thread for each USB port.
-
 
 class JumpCoin:
     # Data update event
@@ -33,17 +30,18 @@ class JumpCoin:
         acc_z = DeviceModel.deviceData[self.modbus_addr]["AccZ"]
         if acc_z < G_THRESHOLD:
             self.force = acc_z
+            self.light_led_in_thread()
             self.playsound()
-            #print("Acceleration in Z-Axis measured", acc_z)
 
-    def __init__(self, coin_name, serial_port, baudrate, modbus_addr, audio_file):
+    def __init__(self, coin_name, serial_port, baudrate, modbus_addr, audio_file, io_pin):
         self.coin_name = coin_name
         self.serial_port = serial_port
         self.baudrate = baudrate
         self.modbus_addr = modbus_addr
         self.time_last_sound = time.monotonic()
         self.sound_player = pyglet.resource.media(audio_file, streaming=False)
-        self.force = 0 # storing triggering g force for printing
+        self.force = 0 # Will later hold triggering g force for printing
+        self.led = gpiozero.LED(io_pin)
         self.accelerometer = device_model.DeviceModel(
             self.coin_name,
             self.serial_port,
@@ -55,8 +53,17 @@ class JumpCoin:
         self.accelerometer.startLoopRead()
 
     def playsound_inthread(self):
-        t = threading.Thread(target=self.playsound, args=())
-        t.start()
+        sound_thread = threading.Thread(target=self.playsound, args=())
+        sound_thread.start()
+    
+    def light_led(self):
+        self.led.on()
+        time.sleep(LED_ON_TIME)
+        self.led.off()
+
+    def light_led_in_thread(self):
+        led_thread = threading.Thread(target=self.light_led, args=())
+        led_thread.start()
 
     def playsound(self):
         current_time = time.monotonic()
