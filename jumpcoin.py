@@ -18,10 +18,10 @@ config.minor_version = 0
 G_THRESHOLD = -1.015    # how much g in z-axix triggers sound
                         # Negative because the sensor is upside down
 
-LED_ON_TIME = 1.5 # Seconds to leave LED ring lit after trigger/jump
+LED_ON_TIME = 3 # Seconds to leave LED ring lit after trigger/jump
 
 MIN_SECONDS_BETWEEN_SOUNDS = (
-    1.6  # Fractional seconds before coin can play sound again
+    0.5 # Fractional seconds before coin can play sound again
 )
 
 class JumpCoin:
@@ -30,8 +30,14 @@ class JumpCoin:
         acc_z = DeviceModel.deviceData[self.modbus_addr]["AccZ"]
         if acc_z < G_THRESHOLD:
             self.force = acc_z
-            self.light_led_in_thread()
+            self.lit = True
+            self.led.on()
             self.playsound()
+        if self.lit:
+            current_time = time.monotonic()
+            if (current_time - self.time_last_sound) > LED_ON_TIME:
+                self.led.off()
+                self.lit = False
 
     def __init__(self, coin_name, serial_port, baudrate, modbus_addr, audio_file, io_pin):
         self.coin_name = coin_name
@@ -42,6 +48,7 @@ class JumpCoin:
         self.sound_player = pyglet.resource.media(audio_file, streaming=False)
         self.force = 0 # Will later hold triggering g force for printing
         self.led = gpiozero.LED(io_pin)
+        self.lit = False
         self.accelerometer = device_model.DeviceModel(
             self.coin_name,
             self.serial_port,
