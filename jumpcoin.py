@@ -3,6 +3,8 @@ import device_model
 import time
 import threading
 import pyglet
+from loguru import logger
+import telemetry
 
 # Pyglet Config, even though no display is used, GL is involved
 pyglet.options['headless'] = True
@@ -49,6 +51,7 @@ class JumpCoin:
         self.force = 0 # Will later hold triggering g force for printing
         self.led = gpiozero.LED(io_pin)
         self.lit = False
+        self.jumps = 0 # Track number of jumps before sending
         self.accelerometer = device_model.DeviceModel(
             self.coin_name,
             self.serial_port,
@@ -76,7 +79,15 @@ class JumpCoin:
         current_time = time.monotonic()
         if (current_time - self.time_last_sound) > MIN_SECONDS_BETWEEN_SOUNDS:
             self.time_last_sound = time.monotonic()
-            print(f"{self.coin_name} says Kaching after {self.force}g")
+            self.jumps = self.jumps + 1
+            logger.info(f"{self.coin_name} says Kaching after {self.force}g")
             self.sound_player.play()
+            if self.jumps > 9:
+                try:
+                    telemetry.send_point_in_thread(self.coin_name, self.jumps)
+                    logger.debug(f"{self.coin_name} sent {self.jumps} and reset counter")
+                    self.jumps = 0
+                except Exception as e:
+                    logger.warning(e)
 #        else:
-#            print(f"Too soon for another sound from {self.coin_name}")
+#            logger.debug(f"Too soon for another sound from {self.coin_name}")

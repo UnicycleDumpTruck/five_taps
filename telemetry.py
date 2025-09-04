@@ -33,7 +33,7 @@ def send_point_in_thread(coin_name, jump_count):
 
 def send_point(coin_name, jump_count):
     try:
-        p = influxdb_client.Point("coin_jumps").tag("location", "Moneypalooza").field("coin_name", coin_name).field("jumps", jump_count)
+        p = influxdb_client.Point(coin_name).tag("location", "Moneypalooza").field("jumps", jump_count)
         write_api.write(bucket=bucket, org=org, record=p)
     except Exception as e:
         logger.warning(f"Error sending point to InfluxDB: {e}")

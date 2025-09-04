@@ -3,7 +3,7 @@ import pyglet
 
 dime = {
     "coin_name": "Dime",
-    "serial_port": "/dev/ttyUSB0",
+    "serial_port": "/dev/ttyUSB2",
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "dime.wav",
@@ -11,7 +11,7 @@ dime = {
 }
 pizza_penny = {
     "coin_name": "Pizza Penny",
-    "serial_port": "/dev/ttyUSB1",
+    "serial_port": "/dev/ttyUSB0",
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "penny.wav",
@@ -19,7 +19,7 @@ pizza_penny = {
 }
 truck_penny = {
     "coin_name": "Truck Penny",
-    "serial_port": "/dev/ttyUSB2",
+    "serial_port": "/dev/ttyUSB4",
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "penny.wav",
@@ -35,7 +35,7 @@ nickel = {
 }
 quarter = {
     "coin_name": "Quarter",
-    "serial_port": "/dev/ttyUSB4",
+    "serial_port": "/dev/ttyUSB1",
     "baudrate": 9600,
     "modbus_addr": 0x50,
     "audio_file": "quarter.wav",
